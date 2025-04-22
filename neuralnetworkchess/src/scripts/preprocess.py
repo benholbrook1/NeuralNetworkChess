@@ -3,7 +3,7 @@ import os
 import numpy as np
 from tqdm import tqdm
 
-def parse_pgn_to_fen(pgn_path, output_path, max_games=1000):
+def parse_pgn_to_fen(pgn_path, output_path, max_games=100000):
     """
     Parse a PNG file to FEN format and save as compressed .npz file
     """
@@ -11,6 +11,7 @@ def parse_pgn_to_fen(pgn_path, output_path, max_games=1000):
     png = open(pgn_path)
     fen_pos = []
     moves = []
+    games_read = 0
 
     # Create output file for parsed data
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -21,6 +22,8 @@ def parse_pgn_to_fen(pgn_path, output_path, max_games=1000):
         game = chess.pgn.read_game(png)
         if game is None:
             break
+
+        games_read += 1
         board = game.board()
         for move in game.mainline_moves():
             board.push(move)
@@ -30,10 +33,12 @@ def parse_pgn_to_fen(pgn_path, output_path, max_games=1000):
     # close file
     png.close()
 
-    # np.savez_compressed(output_path, fens=fen_pos, moves=moves)
+
+    output_path = os.path.join(output_path, f"{pgn_path.split('/')[-1].replace('.npz')}-{games_read}.npz")
+    np.savez_compressed(output_path, fens=fen_pos, moves=moves)
     
 
 parse_pgn_to_fen(
     pgn_path="neuralnetworkchess/data/raw/lichess_db_standard_rated_2013-01.pgn",
-    output_path="neuralnetworkchess/data/processed/fen_moves_2013-01.npz"
+    output_path="neuralnetworkchess/data/processed/"
 )
